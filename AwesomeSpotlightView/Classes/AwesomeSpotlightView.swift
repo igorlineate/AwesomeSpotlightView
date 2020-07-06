@@ -10,23 +10,24 @@ import UIKit
 
 // MARK: - AwesomeSpotlightViewDelegate
 
-@objc protocol AwesomeSpotlightViewDelegate {
+@objc public protocol AwesomeSpotlightViewDelegate: AnyObject {
   @objc optional func spotlightView(_ spotlightView: AwesomeSpotlightView, willNavigateToIndex index: Int)
   @objc optional func spotlightView(_ spotlightView: AwesomeSpotlightView, didNavigateToIndex index: Int)
   @objc optional func spotlightViewWillCleanup(_ spotlightView: AwesomeSpotlightView, atIndex index: Int)
   @objc optional func spotlightViewDidCleanup(_ spotlightView: AwesomeSpotlightView)
 }
 
-class AwesomeSpotlightView: UIView {
+@objcMembers
+public class AwesomeSpotlightView: UIView {
   
-  var delegate : AwesomeSpotlightViewDelegate?
+  public weak var delegate: AwesomeSpotlightViewDelegate?
   
   // MARK: - private variables
   
   private static let kAnimationDuration = 0.3
-  private static let kCutoutRadius : CGFloat = 4.0
+  private static let kCutoutRadius: CGFloat = 4.0
   private static let kMaxLabelWidth = 280.0
-  private static let kMaxLabelSpacing : CGFloat = 35.0
+  private static let kMaxLabelSpacing: CGFloat = 35.0
   private static let kEnableContinueLabel = false
   private static let kEnableSkipButton = false
   private static let kEnableArrowDown = false
@@ -37,8 +38,6 @@ class AwesomeSpotlightView: UIView {
   private static let kSkipButtonLastStepTitle = "Done".localized
   
   private var spotlightMask = CAShapeLayer()
-  private var continueLabel = UILabel()
-  private var skipSpotlightButton = UIButton()
   private var arrowDownImageView = UIImageView()
   private var arrowDownSize = CGSize(width: 12, height: 18)
   private var delayTime: TimeInterval = 0.35
@@ -46,50 +45,53 @@ class AwesomeSpotlightView: UIView {
   
   // MARK: - public variables
   
-  var spotlightsArray: [AwesomeSpotlight] = []
-  var textLabel = UILabel()
-  var animationDuration = kAnimationDuration
-  var cutoutRadius : CGFloat = kCutoutRadius
-  var maxLabelWidth = kMaxLabelWidth
-  var labelSpacing : CGFloat = kMaxLabelSpacing
-  var enableArrowDown = kEnableArrowDown
-  var showAllSpotlightsAtOnce = kShowAllSpotlightsAtOnce
-  var continueButtonModel = AwesomeTabButton(title: "Continue".localized, font: kContinueLabelFont, isEnable: kEnableContinueLabel)
-  var skipButtonModel = AwesomeTabButton(title: "Skip".localized, font: kSkipButtonFont, isEnable: kEnableSkipButton)
-  var skipButtonLastStepTitle = kSkipButtonLastStepTitle
+  public var spotlightsArray: [AwesomeSpotlight] = []
+  public var textLabel = UILabel()
+  public var continueLabel = UILabel()
+  public var skipSpotlightButton = UIButton()
+  public var tipImageView = UIImageView()
+  public var animationDuration = kAnimationDuration
+  public var cutoutRadius: CGFloat = kCutoutRadius
+  public var maxLabelWidth = kMaxLabelWidth
+  public var labelSpacing: CGFloat = kMaxLabelSpacing
+  public var enableArrowDown = kEnableArrowDown
+  public var showAllSpotlightsAtOnce = kShowAllSpotlightsAtOnce
+  public var continueButtonModel = AwesomeTabButton(title: "Continue".localized, font: kContinueLabelFont, isEnable: kEnableContinueLabel)
+  public var skipButtonModel = AwesomeTabButton(title: "Skip".localized, font: kSkipButtonFont, isEnable: kEnableSkipButton)
+  public var skipButtonLastStepTitle = kSkipButtonLastStepTitle
   
-  var spotlightMaskColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.6) {
+  public var spotlightMaskColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.6) {
     didSet {
       spotlightMask.fillColor = spotlightMaskColor.cgColor
     }
   }
   
-  var textLabelFont = kTextLabelFont {
+  public var textLabelFont = kTextLabelFont {
     didSet {
       textLabel.font = textLabelFont
     }
   }
   
-  var isShowed: Bool {
+  public var isShowed: Bool {
     return currentIndex != 0
   }
   
-  var currentIndex = 0
+  public var currentIndex = 0
   
   // MARK: - Initializers
   
-  override init(frame: CGRect) {
+  override public init(frame: CGRect) {
     super.init(frame: frame)
   }
   
-  convenience init(frame: CGRect, spotlight: [AwesomeSpotlight]) {
+  convenience public init(frame: CGRect, spotlight: [AwesomeSpotlight]) {
     self.init(frame: frame)
     
     self.spotlightsArray = spotlight
     self.setup()
   }
   
-  required init?(coder aDecoder: NSCoder) {
+  required public init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
   
@@ -97,6 +99,7 @@ class AwesomeSpotlightView: UIView {
   
   private func setup() {
     setupMask()
+		setupTipImageView()
     setupTouches()
     setupTextLabel()
     setupArrowDown()
@@ -104,7 +107,7 @@ class AwesomeSpotlightView: UIView {
   }
   
   private func setupMask() {
-    spotlightMask.fillRule = kCAFillRuleEvenOdd
+    spotlightMask.fillRule = CAShapeLayerFillRule.evenOdd
     spotlightMask.fillColor = spotlightMaskColor.cgColor
     layer.addSublayer(spotlightMask)
   }
@@ -126,7 +129,14 @@ class AwesomeSpotlightView: UIView {
     textLabel.alpha = 0
     addSubview(textLabel)
   }
-  
+
+	private func setupTipImageView() {
+		tipImageView = UIImageView(frame: bounds)
+		tipImageView.alpha = 0
+		tipImageView.contentMode = .scaleAspectFit
+		addSubview(tipImageView)
+	}
+
   private func setupArrowDown() {
     let arrowDownIconName = "arrowDownIcon"
     if let bundlePath = Bundle.main.path(forResource: "AwesomeSpotlightViewBundle", ofType: "bundle") {
@@ -183,7 +193,7 @@ class AwesomeSpotlightView: UIView {
     goToSpotlightAtIndex(index: currentIndex + 1)
   }
   
-  override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+  override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
     let view = super.hitTest(point, with: event)
     let localPoint = convert(point, from: self)
     hitTestPoints.append(localPoint)
@@ -207,20 +217,22 @@ class AwesomeSpotlightView: UIView {
   
   // MARK: - Presenter
   
-  func start() {
+  public func start() {
+    start(fromIndex: 0)
+  }
+  
+  public func start(fromIndex index: Int) {
     alpha = 0
     isHidden = false
     textLabel.font = textLabelFont
     UIView.animate(withDuration: animationDuration, animations: {
       self.alpha = 1
     }) { (finished) in
-      self.goToFirstSpotlight()
+      self.goToSpotlightAtIndex(index: index)
     }
   }
   
-  private func goToFirstSpotlight() {
-    goToSpotlightAtIndex(index: 0)
-  }
+  // MARK: - Private
   
   private func goToSpotlightAtIndex(index: Int) {
     if index >= spotlightsArray.count {
@@ -253,7 +265,9 @@ class AwesomeSpotlightView: UIView {
     showTextLabel(spotlight: currentSpotlight)
     
     showArrowIfNeeded(spotlight: currentSpotlight)
-    
+
+		showTipImageIfNeeded(spotlight: currentSpotlight)
+
     if currentIndex == 0 {
       setCutoutToSpotlight(spotlight: currentSpotlight)
     }
@@ -263,10 +277,33 @@ class AwesomeSpotlightView: UIView {
     showContinueLabelIfNeeded(index: index)
     showSkipButtonIfNeeded(index: index)
   }
-  
+
+	private func showTipImageIfNeeded(spotlight: AwesomeSpotlight) {
+
+		guard let tipImage = spotlight.showedTipImage else {
+			return
+		}
+		tipImageView.image = tipImage
+		tipImageView.alpha = 0
+		calculatePositionAndSizeTipImageView()
+    UIView.animate(withDuration: animationDuration) {
+      self.tipImageView.alpha = 1
+    }
+	}
+
+	private func calculatePositionAndSizeTipImageView() {
+		var tipFrame = CGRect(x: 0, y: 0 , width: bounds.size.width * 2/3 , height: bounds.size.height * 2/3)
+		tipFrame.origin.x = bounds.size.width/2 - tipFrame.size.width/2
+		tipFrame.origin.y = bounds.size.height/2 - tipFrame.size.height/2
+		tipImageView.frame = tipFrame
+	}
+
   private func showArrowIfNeeded(spotlight: AwesomeSpotlight) {
     if enableArrowDown {
-      arrowDownImageView.frame = CGRect(origin: CGPoint(x: center.x - 6, y: spotlight.rect.origin.y - 18 - 16), size: arrowDownSize)
+      let arrowImageOrigin = CGPoint(x: spotlight.rect.origin.x + spotlight.rect.width / 2.0 - arrowDownSize.width / 2.0,
+                                     y: spotlight.rect.origin.y - arrowDownSize.height * 2)
+      arrowDownImageView.frame = CGRect(origin: arrowImageOrigin,
+                                        size: arrowDownSize)
       UIView.animate(withDuration: animationDuration, animations: {
         self.arrowDownImageView.alpha = 1
       })
@@ -413,10 +450,10 @@ class AwesomeSpotlightView: UIView {
     let animationKeyPath = "path"
     let animation = CABasicAnimation(keyPath: animationKeyPath)
     animation.delegate = self
-    animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+    animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
     animation.duration = animationDuration
     animation.isRemovedOnCompletion = false
-    animation.fillMode = kCAFillModeForwards
+    animation.fillMode = CAMediaTimingFillMode.forwards
     animation.fromValue = spotlightMask.path
     animation.toValue = path
     spotlightMask.add(animation, forKey: animationKeyPath)
@@ -435,6 +472,7 @@ class AwesomeSpotlightView: UIView {
         self.currentIndex = 0
         self.textLabel.alpha = 0
         self.continueLabel.alpha = 0
+				self.tipImageView.alpha = 0
         self.skipSpotlightButton.alpha = 0
         self.hitTestPoints = []
         self.delegate?.spotlightViewDidCleanup?(self)
@@ -442,10 +480,20 @@ class AwesomeSpotlightView: UIView {
     }
   }
   
+    // MARK: - Objective-C Support Function
+    // Objective-C provides support function because it does not correspond to struct
+    
+    public func setContinueButtonEnable(_ isEnable:Bool) {
+        self.continueButtonModel.isEnable = isEnable
+    }
+    
+    public func setSkipButtonEnable(_ isEnable:Bool) {
+        self.skipButtonModel.isEnable = isEnable
+    }
 }
 
-extension AwesomeSpotlightView : CAAnimationDelegate {
-  func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
+extension AwesomeSpotlightView: CAAnimationDelegate {
+  public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
     delegate?.spotlightView?(self, didNavigateToIndex: currentIndex)
   }
 }
